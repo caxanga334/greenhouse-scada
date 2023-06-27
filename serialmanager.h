@@ -143,7 +143,9 @@ protected:
 
 private:
 	void ReadConfigLine(const std::string line);
-	void OnTimerLow(); // called when the timer reaches zero
+	bool CheckWrite();
+	void CheckRead();
+	void WriteNextCommand();
 	void SendCommandInternal(const std::string cmd);
 	void ReceiveCommandInternal();
 	void ProcessReceivedCommand();
@@ -151,7 +153,8 @@ private:
 
 	CSerialConfiguration m_serialcfg;
 	std::shared_ptr<serialib> m_serialib;
-	int m_timer;
+	int m_writetimer;
+	int m_readtimer;
 	std::queue<std::string> m_cmd_queue;
 	std::string m_last_cmd; // Last received command from the microcontroller
 	Glib::Dispatcher m_receiverdispatcher;

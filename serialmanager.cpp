@@ -26,9 +26,9 @@
 
 // Update is called every 500 ms
 
-#define DELAY_BETWEEN_COMMANDS 5
-#define DELAY_BETWEEN_READS 2
-#define DELAY_NO_COMMANDS 1
+#define SERIAL_WRITE_DELAY 7
+#define SERIAL_READ_DELAY 4
+#define SERIAL_READ_WAIT_FOR_THREAD_DELAY 1 // update cycle to wait when the read thread is busy
 #define SERIAL_READ_TIMEOUT_MS 2000 // timeout for serial read operations in milliseconds
 
 CSerialCommand::CSerialCommand(std::string rawcommand)
@@ -169,6 +169,8 @@ bool CSerialReceiver::Done() const
 
 CSerialManager::CSerialManager() :
 m_serialcfg(),
+m_writetimer(0),
+m_readtimer(0),
 m_cmd_queue(),
 m_last_cmd(""),
 m_receiverdispatcher(),
@@ -176,7 +178,6 @@ m_receiverworker(),
 m_receiverthread(nullptr)
 {
 	m_serialib = std::make_shared<serialib>();
-	m_timer = DELAY_NO_COMMANDS;
 	m_receiverdispatcher.connect(sigc::mem_fun(*this, &CSerialManager::OnSignal_ReceiveCommand));
 	m_mainwindow = nullptr;
 }
@@ -338,14 +339,24 @@ void CSerialManager::Update()
 	if (!IsConnected())
 		return;
 
-	// Very basic timer, update is called approximately every 100 ms
-	if (m_timer > 0)
+	bool didwrite = false;
+
+	if (m_writetimer > 0)
 	{
-		m_timer--;
+		m_writetimer--;
 	}
 	else
 	{
-		OnTimerLow();
+		didwrite = CheckWrite();
+	}
+
+	if (m_readtimer > 0)
+	{
+		m_readtimer--;
+	}
+	else if (!didwrite) // Only try to read the serial if we didn't write something to it
+	{
+		CheckRead();
 	}
 }
 
@@ -464,26 +475,38 @@ void CSerialManager::ReadConfigLine(const std::string line)
 	}
 }
 
-void CSerialManager::OnTimerLow()
+bool CSerialManager::CheckWrite()
 {
-	if (m_cmd_queue.size() > 0) // there are commands to be sent to the microcontroller
+	if (m_cmd_queue.size() > 0)
 	{
-		m_timer = DELAY_BETWEEN_COMMANDS;
-		std::string command = m_cmd_queue.front();
-		m_cmd_queue.pop();
-		m_serialib->writeString(command.c_str());
-		std::cout << "Command written to serial: \"" << command << "\"" << std::endl;
+		m_writetimer = SERIAL_WRITE_DELAY;
+		WriteNextCommand();
+		return true;
 	}
-	else if (m_receiverthread == nullptr) // We are not reading something already
+
+	return false;
+}
+
+void CSerialManager::CheckRead()
+{
+	if (m_receiverthread == nullptr)
 	{
-		// std::cout << "Trying to reading serial..." << std::endl;
-		m_timer = DELAY_BETWEEN_READS;
 		ReceiveCommandInternal();
 	}
 	else
 	{
-		m_timer = DELAY_NO_COMMANDS;
+		m_readtimer = SERIAL_READ_WAIT_FOR_THREAD_DELAY;
+		std::cout << "Serial reader thread is busy, waiting..." << std::endl;
 	}
+	
+}
+
+void CSerialManager::WriteNextCommand()
+{
+	std::string command = m_cmd_queue.front();
+	m_cmd_queue.pop();
+	m_serialib->writeString(command.c_str());
+	std::cout << "Command written to serial: \"" << command << "\"" << std::endl;
 }
 
 void CSerialManager::SendCommandInternal(const std::string cmd)
@@ -502,6 +525,8 @@ void CSerialManager::ReceiveCommandInternal()
 		std::cout << "No serial data available" << std::endl;
 		return;
 	}
+
+	m_readtimer = SERIAL_READ_DELAY;
 
 	m_receiverthread = new std::thread(
 		[this]

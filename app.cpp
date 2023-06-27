@@ -19,6 +19,8 @@
 #include "app.h"
 #include <iostream>
 
+#define SERIAL_TIMER_MS 500 // frequency to call the serial update function in ms
+
 MainWindow::MainWindow() :
 m_grid(),
 m_subbox(),
@@ -61,7 +63,7 @@ m_serialframe()
 	set_child(m_grid);
 
 	sigc::slot<bool()> slot_update = sigc::bind(sigc::mem_fun(*this, &MainWindow::OnTimer_Update));
-	m_updatetimer = Glib::signal_timeout().connect(slot_update, 500); // Call serial manager update every 500 ms
+	m_updatetimer = Glib::signal_timeout().connect(slot_update, SERIAL_TIMER_MS); // Call serial manager update every 500 ms
 }
 
 MainWindow::~MainWindow()

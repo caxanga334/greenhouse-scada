@@ -227,6 +227,10 @@ bool CSerialManager::ReadConfigFile()
 			continue;
 		}
 
+		// Remove these two, while Windows doesn't care, Linux does.
+		line.erase(std::remove(line.begin(), line.end(), '\r'), line.cend());
+		line.erase(std::remove(line.begin(), line.end(), '\n'), line.cend());
+
 		ReadConfigLine(line);
 	}
 	
@@ -407,6 +411,10 @@ void CSerialManager::ReadConfigLine(const std::string line)
 		{
 			m_serialcfg.databits = SERIAL_DATABITS_16;
 		}
+		else
+		{
+			std::cout << "Unhandled setting " << setting << " value " << value << std::endl;	
+		}
 	}
 	else if (setting == "Parity")
 	{
@@ -430,6 +438,10 @@ void CSerialManager::ReadConfigLine(const std::string line)
 		{
 			m_serialcfg.parity = SERIAL_PARITY_SPACE;
 		}
+		else
+		{
+			std::cout << "Unhandled setting " << setting << " value " << value << std::endl;	
+		}
 	}
 	else if (setting == "Stopbits")
 	{
@@ -444,6 +456,10 @@ void CSerialManager::ReadConfigLine(const std::string line)
 		else if (value == "SERIAL_STOPBITS_2")
 		{
 			m_serialcfg.stopbits = SERIAL_STOPBITS_2;
+		}
+		else
+		{
+			std::cout << "Unhandled setting " << setting << " value " << value << std::endl;	
 		}
 	}
 }

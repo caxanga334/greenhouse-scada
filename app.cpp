@@ -90,9 +90,9 @@ void MainWindow::OnReceiveSerialCommand(CSerialCommand *command)
 		m_dataframe_led.SetPWM(command->GetPWMData());
 		break;
 	case SETPOINT_HUMIDITY:
-		m_dataframe_led.SetSetpoint(command->GetSetpointData());
-		m_dataframe_led.SetSensor(command->GetSensorData());
-		m_dataframe_led.SetPWM(command->GetPWMData());
+		m_dataframe_humid.SetSetpoint(command->GetSetpointData());
+		m_dataframe_humid.SetSensor(command->GetSensorData());
+		m_dataframe_humid.SetPWM(command->GetPWMData());
 		break;
 	default:
 		break;

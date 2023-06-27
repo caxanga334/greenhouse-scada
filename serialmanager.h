@@ -27,6 +27,8 @@
 #include <thread>
 #include <mutex>
 
+#include "logger.h"
+
 class MainWindow;
 
 // BUG? serialib must be included after gtkmm.h or else you get 100+ errors
@@ -138,6 +140,8 @@ public:
 
 	void SetMainWindow(MainWindow* window) { m_mainwindow = window; }
 
+	void InvokeLogger();
+
 protected:
 	void OnSignal_ReceiveCommand();
 
@@ -161,6 +165,9 @@ private:
 	CSerialReceiver m_receiverworker;
 	std::thread* m_receiverthread;
 	MainWindow* m_mainwindow;
+	CDataLogger m_logger_temp;
+	CDataLogger m_logger_led;
+	CDataLogger m_logger_humid;
 };
 
 #endif

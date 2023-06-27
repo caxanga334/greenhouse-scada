@@ -24,7 +24,8 @@ CSerialFrame::CSerialFrame() :
 m_box(Gtk::Orientation::HORIZONTAL, 5),
 m_button_power("LIGADO"),
 m_button_conn("Conectar"),
-m_button_reload("Reconfigurar")
+m_button_reload("Reconfigurar"),
+m_button_logdump("Logger")
 {
 	set_label("Controle Serial");
 	set_label_align(Gtk::Align::CENTER);
@@ -32,14 +33,17 @@ m_button_reload("Reconfigurar")
 	m_box.append(m_button_power);
 	m_box.append(m_button_conn);
 	m_box.append(m_button_reload);
+	m_box.append(m_button_logdump);
 
 	m_button_power.signal_toggled().connect(sigc::mem_fun(*this, &CSerialFrame::OnToggle_PowerButton));
 	m_button_conn.signal_clicked().connect(sigc::mem_fun(*this, &CSerialFrame::OnClick_ConnectButton));
 	m_button_reload.signal_clicked().connect(sigc::mem_fun(*this, &CSerialFrame::OnClick_ReloadButton));
+	m_button_logdump.signal_clicked().connect(sigc::mem_fun(*this, &CSerialFrame::OnClick_LoggerButton));
 
 	m_button_power.set_expand(true);
 	m_button_conn.set_expand(true);
 	m_button_reload.set_expand(true);
+	m_button_logdump.set_expand(true);
 	m_box.set_expand(true);
 
 	set_child(m_box);
@@ -76,4 +80,9 @@ void CSerialFrame::OnToggle_PowerButton()
 void CSerialFrame::OnClick_ReloadButton()
 {
 	m_parentWindow->GetSerialManager()->ReloadConfig();
+}
+
+void CSerialFrame::OnClick_LoggerButton()
+{
+	m_parentWindow->GetSerialManager()->InvokeLogger();
 }

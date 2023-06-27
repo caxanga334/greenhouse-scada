@@ -34,12 +34,14 @@ protected:
 	void OnClick_ConnectButton();
 	void OnToggle_PowerButton();
 	void OnClick_ReloadButton();
+	void OnClick_LoggerButton();
 
 private:
 	Gtk::Box m_box;
 	Gtk::CheckButton m_button_power;
 	Gtk::Button m_button_conn; // Serial connect button
 	Gtk::Button m_button_reload; // Reload config file button
+	Gtk::Button m_button_logdump; // Dump logged values to file
 	MainWindow* m_parentWindow;
 };
 

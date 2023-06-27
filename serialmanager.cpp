@@ -175,7 +175,10 @@ m_cmd_queue(),
 m_last_cmd(""),
 m_receiverdispatcher(),
 m_receiverworker(),
-m_receiverthread(nullptr)
+m_receiverthread(nullptr),
+m_logger_temp("temperature"),
+m_logger_led("led"),
+m_logger_humid("humidity")
 {
 	m_serialib = std::make_shared<serialib>();
 	m_receiverdispatcher.connect(sigc::mem_fun(*this, &CSerialManager::OnSignal_ReceiveCommand));
@@ -365,6 +368,13 @@ void CSerialManager::Notify_SerialReceiver()
 	m_receiverdispatcher.emit();
 }
 
+void CSerialManager::InvokeLogger()
+{
+	m_logger_temp.WriteToFile();
+	m_logger_led.WriteToFile();
+	m_logger_humid.WriteToFile();
+}
+
 void CSerialManager::OnSignal_ReceiveCommand()
 {
 	if (m_receiverthread && m_receiverworker.Done())
@@ -545,6 +555,21 @@ void CSerialManager::ProcessReceivedCommand()
 {
 	std::unique_ptr<CSerialCommand> command (new CSerialCommand(m_last_cmd));
 	command->Parse();
+
+	switch (command->GetType())
+	{
+	case SETPOINT_TEMPERATURE:
+		m_logger_temp.Log(command->GetSetpointData(), command->GetSensorData(), command->GetPWMData());
+		break;
+	case SETPOINT_LED:
+		m_logger_led.Log(command->GetSetpointData(), command->GetSensorData(), command->GetPWMData());
+		break;
+	case SETPOINT_HUMIDITY:
+		m_logger_humid.Log(command->GetSetpointData(), command->GetSensorData(), command->GetPWMData());
+		break;
+	default:
+		break;
+	}
 
 	if (command->GetType() != SETPOINT_INVALID)
 	{

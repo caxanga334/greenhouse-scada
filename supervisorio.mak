@@ -1,5 +1,5 @@
-OBJS	= lib/serialib.o serialmanager.o serialcontrol.o controlframe.o dataframe.o app.o main.o
-SOURCE	= lib/serialib.cpp serialmanager.cpp serialcontrol.cpp controlframe.cpp dataframe.cpp app.cpp main.cpp
+OBJS	= lib/serialib.o logger.o serialmanager.o serialcontrol.o controlframe.o dataframe.o app.o main.o
+SOURCE	= lib/serialib.cpp logger.cpp serialmanager.cpp serialcontrol.cpp controlframe.cpp dataframe.cpp app.cpp main.cpp
 HEADER	= 
 OUT	= supervisorio
 CC	 = g++
@@ -31,6 +31,9 @@ serialmanager.o: serialmanager.cpp
 
 serialcontrol.o: serialcontrol.cpp
 	$(CC) $(FLAGS) serialcontrol.cpp -std=c++17
+
+logger.o: logger.cpp
+	$(CC) $(FLAGS) logger.cpp -std=c++17
 
 lib/serialib.o: lib/serialib.cpp
 	$(CC) $(FLAGS) lib/serialib.cpp -o lib/serialib.o -std=c++17

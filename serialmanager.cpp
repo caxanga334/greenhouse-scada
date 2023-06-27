@@ -256,8 +256,27 @@ bool CSerialManager::OpenConnection()
 	case -1:
 		std::cout << "Failed to open serial connection. Error: Device " << m_serialcfg.devicename << " was not found!" << std::endl;
 		break;
+	case -2:
+		std::cout << "Failed to open serial connection. Error while opening the device " << m_serialcfg.devicename << std::endl;
+#ifdef __linux__
+		std::cout << "On linux, this may also indicate that the device is not found." << std::endl;
+		std::cout << "This will likely occur if the \"serial.cfg\" file is saved with CRLF instead of LF." << std::endl;
+#endif
+		break;
+	case -3:
+		std::cout << "Failed to open serial connection. Error while getting port parameters." << std::endl;
+		break;
+	case -4:
+		std::cout << "Failed to open serial connection. Speed (baud rate) " << m_serialcfg.baudrate << " not recognized." << std::endl;
+		break;
+	case -5:
+		std::cout << "Failed to open serial connection. Error while writing port parameters." << std::endl;
+		break;
+	case -6:
+		std::cout << "Failed to open serial connection. Error while writing timeout parameters." << std::endl;
+		break;
 	default:
-		std::cout << "Failed to open serial connection. Unhandled error code " << result << std::endl;
+		std::cout << "Failed to open serial connection. Unhandled error code " << static_cast<int>(result) << std::endl;
 		break;
 	}
 

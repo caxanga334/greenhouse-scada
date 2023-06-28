@@ -36,7 +36,7 @@ public:
 	virtual ~CDataWriter();
 
 	// Writes data to file
-	void Write(CDataLogger* logger, std::vector<std::string>* setpoint, std::vector<std::string>* sensor, std::vector<std::string>* pwm);
+	void Write(CDataLogger* logger, std::vector<std::string>* timestamp, std::vector<std::string>* setpoint, std::vector<std::string>* sensor, std::vector<std::string>* pwm);
 	bool Done();
 private:
 	mutable std::mutex m_mutex;
@@ -59,6 +59,7 @@ private:
 	void OnSignal_WriterDone();
 
 	std::string m_filename;
+	std::shared_ptr<std::vector<std::string>> m_timestamp_vector;
 	std::shared_ptr<std::vector<std::string>> m_setpoint_vector;
 	std::shared_ptr<std::vector<std::string>> m_sensor_vector;
 	std::shared_ptr<std::vector<std::string>> m_pwm_vector;

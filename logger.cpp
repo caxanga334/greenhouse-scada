@@ -31,7 +31,7 @@ CDataWriter::~CDataWriter()
 {
 }
 
-void CDataWriter::Write(CDataLogger* logger, std::vector<std::string> *setpoint, std::vector<std::string> *sensor, std::vector<std::string> *pwm)
+void CDataWriter::Write(CDataLogger* logger, std::vector<std::string>* timestamp, std::vector<std::string> *setpoint, std::vector<std::string> *sensor, std::vector<std::string> *pwm)
 {
 	std::lock_guard<std::mutex> lock(m_mutex);
 	std::string filename = "log_" + m_filename + ".log";
@@ -42,7 +42,7 @@ void CDataWriter::Write(CDataLogger* logger, std::vector<std::string> *setpoint,
 	filestream.open(filename, std::fstream::out | std::fstream::app);
 	for (std::size_t i = 0; i < setpoint->size(); i++)
 	{
-		line = "Setpoint: " + setpoint->at(i) + " Sensor: " + sensor->at(i) + " PWM: " + pwm->at(i) + " \n";
+		line = timestamp->at(i) + " Setpoint: " + setpoint->at(i) + " Sensor: " + sensor->at(i) + " PWM: " + pwm->at(i) + " \n";
 		filestream.write(line.c_str(), line.size());
 	}
 	
@@ -59,6 +59,7 @@ bool CDataWriter::Done()
 
 CDataLogger::CDataLogger(std::string filename) :
 m_filename(filename),
+m_timestamp_vector(new std::vector<std::string>),
 m_setpoint_vector(new std::vector<std::string>()),
 m_sensor_vector(new std::vector<std::string>()),
 m_pwm_vector(new std::vector<std::string>()),
@@ -86,6 +87,11 @@ void CDataLogger::Log(std::string setpoint, std::string sensor, std::string pwm)
 	if (m_thread != nullptr) // Don't log new data while the writer thread is working
 		return;
 
+	std::time_t time = std::time(nullptr);
+	std::unique_ptr<char[]> timebuffer(new char[128]);
+	std::strftime(timebuffer.get(), 128, "%Y-%m-%dT%H:%M:%SZ", std::localtime(&time));
+	
+	m_timestamp_vector.get()->emplace_back(timebuffer.get());
 	m_setpoint_vector.get()->emplace_back(setpoint);
 	m_sensor_vector.get()->emplace_back(sensor);
 	m_pwm_vector.get()->emplace_back(pwm);
@@ -106,13 +112,14 @@ void CDataLogger::WriteToFile()
 		m_thread = new std::thread(
 			[this]
 			{
-				m_writer.Write(this, m_setpoint_vector.get(), m_sensor_vector.get(), m_pwm_vector.get());
+				m_writer.Write(this, m_timestamp_vector.get(), m_setpoint_vector.get(), m_sensor_vector.get(), m_pwm_vector.get());
 			});
 	}
 }
 
 void CDataLogger::OnSignal_WriterDone()
 {
+	m_timestamp_vector.get()->clear();
 	m_setpoint_vector.get()->clear();
 	m_sensor_vector.get()->clear();
 	m_pwm_vector.get()->clear();
